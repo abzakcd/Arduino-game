@@ -18,3 +18,24 @@ void wifiClient_Setup() {
   Serial.println("Connected to network");
 }
 
+int GetData() {
+  // Get data from server
+  int ret = -1;
+  HTTPClient http;
+  String dataURL = "http://api.kits4.me/GEN/api.php?ACT=GET&DEV=1121&CH=1";
+  http.begin(client, dataURL);
+  int httpCode = http.GET();
+  Serial.print("HTTP response code: ");
+  Serial.println(httpCode);
+  if (httpCode == HTTP_CODE_OK) {
+    String Res = http.getString();
+    Serial.print("Response: ");
+    Serial.println(Res);
+    ret = Res.toInt();
+  } else {
+    Serial.print("Error on HTTP request: ");
+    Serial.println(http.errorToString(httpCode).c_str());
+  }
+  http.end();
+  return ret;
+}
