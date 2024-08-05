@@ -1,52 +1,61 @@
-#define pinLed_R D1
-#define pinLed_G D3
-#define pinLed_B D4
-#define pinBtn D7
+#define PIN_LED_R D1
+#define PIN_LED_G D3
+#define PIN_LED_B D4
+#define PIN_BTN D7
 
-int lastVal;
-unsigned long lastPress;
-unsigned long duration;
-unsigned long lastDuration;
-#define pinBtn D7
+int lastButtonState;
+unsigned long lastPressTime;
+unsigned long pressDuration;
+unsigned long lastPressDuration;
 
-int lastVal;
-unsigned long lastPress;
-unsigned long duration;
-unsigned long lastDuration;
-
-void game_setup() {
+void setup() {
   Serial.begin(9600);
-  Serial.begin(9600);
-  pinMode(pinLed_R, OUTPUT);
-  pinMode(pinLed_G, OUTPUT);
-  pinMode(pinLed_B, OUTPUT);
-  pinMode(pinBtn, INPUT_PULLUP);
-  LedOFF();
-  lastVal = HIGH;
-  lastPress = millis();
-  pinMode(pinBtn, INPUT_PULLUP);
-  LedOFF();
-  lastVal = HIGH;
-  lastPress = millis();
+  pinMode(PIN_LED_R, OUTPUT);
+  pinMode(PIN_LED_G, OUTPUT);
+  pinMode(PIN_LED_B, OUTPUT);
+  pinMode(PIN_BTN, INPUT_PULLUP);
+  turnOffLed();
+  lastButtonState = HIGH;
+  lastPressTime = millis();
 }
 
-void game_loop() {
-  lastDuration = GetData();
-  if(lastDuration <= 0) SendData(6000000);//במידה והשרת ריק
+void loop() {
+  lastPressDuration = getData();
+  if (lastPressDuration <= 0) {
+    sendData(6000000);
+  }
   
-  if (digitalRead(pinBtn) == LOW && lastVal == HIGH && (millis() - lastPress > 50)) {
-    lastPress = millis();
-    lastVal = LOW;
+  int buttonState = digitalRead(PIN_BTN);
+
+  if (buttonState == LOW && lastButtonState == HIGH && (millis() - lastPressTime > 50)) {
+    lastPressTime = millis();
+    lastButtonState = LOW;
     Serial.println("start press");
   }
-  if (digitalRead(pinBtn) == HIGH && lastVal == LOW) {
-    lastVal = HIGH;
-    duration = millis() - lastPress;
+  
+  if (buttonState == HIGH && lastButtonState == LOW) {
+    lastButtonState = HIGH;
+    pressDuration = millis() - lastPressTime;
     Serial.println("end press");
     Serial.print("Duration: ");
-    Serial.println(duration);
-
-   
+    Serial.println(pressDuration);
   }
 }
 
+void lightLed(long hexaColor) {
+  // Set the LED to a specific color based on the hexadecimal color value
+  int red = (hexaColor >> 16) & 0xFF;
+  int green = (hexaColor >> 8) & 0xFF;
+  int blue = hexaColor & 0xFF;
+
+  analogWrite(PIN_LED_R, red);
+  analogWrite(PIN_LED_G, green);
+  analogWrite(PIN_LED_B, blue);
+}
+
+void turnOffLed() {
+  // Turn off all LEDs
+  analogWrite(PIN_LED_R, 0);
+  analogWrite(PIN_LED_G, 0);
+  analogWrite(PIN_LED_B, 0);
+}
