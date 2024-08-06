@@ -1,20 +1,20 @@
 #define Switch_pin D2
 
-bool IamServer;
+bool IsServer;
 int cnt = 0;
 
 void setup() {
   pinMode(Switch_pin, INPUT_PULLUP);
-  game_setup();
+  setupgame();
 }
 
 void loop() {
-  IamServer = (digitalRead(Switch_pin) == LOW) ? true : false;
-  if (!IamServer) {
-    LedOFF();
-    game_loop();
-  } else if (IamServer && cnt == 0) {
-    performance_setup();
+  IsServer = (digitalRead(Switch_pin) == LOW) ? true : false;
+  if (!IsServer) {
+    LedOff();
+    gameloop();
+  } else if (IsServer && cnt == 0) {
+    performancesetup();
     cnt++;
-  } else performance_loop();
+  } else performanceloop();
 }
