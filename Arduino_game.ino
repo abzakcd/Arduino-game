@@ -1,19 +1,20 @@
-#define Switch_pin D2
+#include <SPI.h>
+#include <Wire.h>
 
-bool IsServer;
-int cnt = 0;
-
+// הגדרת קבועים ומשתנים
+const int ledPin = 13; 
+int buttonState = 0; 
 void setup() {
-  pinMode(Switch_pin, INPUT_PULLUP);
-  game_setup();
+  pinMode(ledPin, OUTPUT); 
+  pinMode(2, INPUT); 
 }
 
 void loop() {
-  IsServer = (digitalRead(Switch_pin) == LOW) ? true : false;
-  if (!IsServer) {
-    game_loop();
-  } else if (IsServer && cnt == 0) {
-    performance_setup();
-    cnt++;
-  } else performance_loop();
+  buttonState = digitalRead(2); 
+
+  if (buttonState == HIGH) {
+    digitalWrite(ledPin, HIGH);
+  } else { 
+    digitalWrite(ledPin, LOW);
+  }
 }
