@@ -19,7 +19,6 @@ void wifiClient_Setup() {
 }
 
 int GetData() {
-  // Get data from server
   int ret = -1;
   HTTPClient http;
   String dataURL = "http://api.kits4.me/GEN/api.php?ACT=GET&DEV=1121&CH=1";
@@ -40,9 +39,7 @@ int GetData() {
   return ret;
 }
 
-
 void SendData(int val) {
-  // Send data to server
   HTTPClient http;
   String dataURL = "http://api.kits4.me/GEN/api.php?ACT=SET&DEV=1121&CH=1&VAL=" + String(val);
   http.begin(client, dataURL);
