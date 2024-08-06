@@ -3,7 +3,7 @@
 
 IPAddress apIP(55, 55, 55, 55);
 
-const char* mySsid = "Z_Arduino";  // Network name
+const char* mySsid = "Arduino";  // Network name
 const char* pass = "";         // Network password, if any
 
 ESP8266WebServer server(80);
