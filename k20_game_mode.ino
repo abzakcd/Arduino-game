@@ -23,8 +23,7 @@ void setupGameMode() {
   previousState = HIGH;
   lastButtonPressTime = millis();
   previousPressDuration = fetchData();
-  if (previousPressDuration <= 0) sendDataToServer(6000000);  // במקרה והשרת ריק
-}
+  if (previousPressDuration <= 0) sendDataToServer(60000);  
 
 void gameModeLoop() {
   if (digitalRead(buttonPin) == LOW && previousState == HIGH && (millis() - lastButtonPressTime > 50)) {
