@@ -1,72 +1,72 @@
-#define pinLed_R D1
-#define pinLed_G D3
-#define pinLed_B D4
-#define pinBtn D7
+#define redLedPin D1
+#define greenLedPin D3
+#define blueLedPin D4
+#define buttonPin D7
 
-int lastVal;
-unsigned long lastPress;
-unsigned long duration;
-unsigned long lastDuration;
+int previousState;
+unsigned long lastButtonPressTime;
+unsigned long pressDuration;
+unsigned long previousPressDuration;
 
-unsigned long pressDurations[10] = { 0 };
-bool isImprove[10] = { false };
-int pressIndex = 0;
+unsigned long pressDurationsArray[10] = { 0 };
+bool improvementFlag[10] = { false };
+int currentIndex = 0;
 
-void setupgame() {
-  wifiClient_Setup();
+void setupGameMode() {
+  setupWiFiClient();
   Serial.begin(9600);
-  pinMode(pinLed_R, OUTPUT);
-  pinMode(pinLed_G, OUTPUT);
-  pinMode(pinLed_B, OUTPUT);
-  pinMode(pinBtn, INPUT_PULLUP);
-  LedOFF();
-  lastVal = HIGH;
-  lastPress = millis();
-  lastDuration = GetData();
-  if (lastDuration <= 0) SendData(6000000);  // במקרה והשרת ריק
+  pinMode(redLedPin, OUTPUT);
+  pinMode(greenLedPin, OUTPUT);
+  pinMode(blueLedPin, OUTPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
+  turnOffLeds();
+  previousState = HIGH;
+  lastButtonPressTime = millis();
+  previousPressDuration = fetchData();
+  if (previousPressDuration <= 0) sendDataToServer(6000000);  // במקרה והשרת ריק
 }
 
-void gameloop() {
-  if (digitalRead(pinBtn) == LOW && lastVal == HIGH && (millis() - lastPress > 50)) {
-    lastPress = millis();
-    lastVal = LOW;
-    Serial.println("start press");
+void gameModeLoop() {
+  if (digitalRead(buttonPin) == LOW && previousState == HIGH && (millis() - lastButtonPressTime > 50)) {
+    lastButtonPressTime = millis();
+    previousState = LOW;
+    Serial.println("Button Pressed");
   }
-  if (digitalRead(pinBtn) == HIGH && lastVal == LOW) {
-    lastVal = HIGH;
-    duration = millis() - lastPress;
-    Serial.println("end press");
+  if (digitalRead(buttonPin) == HIGH && previousState == LOW) {
+    previousState = HIGH;
+    pressDuration = millis() - lastButtonPressTime;
+    Serial.println("Button Released");
     Serial.print("Duration: ");
-    Serial.println(duration);
+    Serial.println(pressDuration);
 
-    pressDurations[pressIndex] = duration;
-    isImprove[pressIndex] = duration < lastDuration;
+    pressDurationsArray[currentIndex] = pressDuration;
+    improvementFlag[currentIndex] = pressDuration < previousPressDuration;
 
-    if (isImprove[pressIndex]) {
-      SendData(duration);
-      LightLed(0x5DE2E7);
+    if (improvementFlag[currentIndex]) {
+      sendDataToServer(pressDuration);
+      activateLed(0x5DE2E7);
     } else {
-      LightLed(0xFE9900);
+      activateLed(0xFE9900);
     }
 
-    pressIndex = (pressIndex + 1) % 10;
+    currentIndex = (currentIndex + 1) % 10;
     delay(200);
-    lastDuration = GetData();
+    previousPressDuration = fetchData();
   }
 }
 
-void LightLed(long HexaColor) {
-  int red = (HexaColor >> 16) & 0xFF;
-  int green = (HexaColor >> 8) & 0xFF;
-  int blue = HexaColor & 0xFF;
+void activateLed(long colorHex) {
+  int redValue = (colorHex >> 16) & 0xFF;
+  int greenValue = (colorHex >> 8) & 0xFF;
+  int blueValue = colorHex & 0xFF;
 
-  analogWrite(pinLed_R, red);
-  analogWrite(pinLed_G, green);
-  analogWrite(pinLed_B, blue);
+  analogWrite(redLedPin, redValue);
+  analogWrite(greenLedPin, greenValue);
+  analogWrite(blueLedPin, blueValue);
 }
 
-void LedOff() {
-  analogWrite(pinLed_R, 0);
-  analogWrite(pinLed_G, 0);
-  analogWrite(pinLed_B, 0);
+void turnOffLeds() {
+  analogWrite(redLedPin, 0);
+  analogWrite(greenLedPin, 0);
+  analogWrite(blueLedPin, 0);
 }

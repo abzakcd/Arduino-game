@@ -3,54 +3,55 @@
 
 IPAddress apIP(55, 55, 55, 55);
 
-const char* mySsid = "Arduino";  // Network name
-const char* pass = "";         // Network password, if any
+const char* networkName = "Arduino";  // Network name
+const char* networkPassword = "";     // Network password, if any
 
-ESP8266WebServer server(80);
+ESP8266WebServer webServer(80);
 
-void wifiSetup() {
+void configureWiFi() {
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-  WiFi.softAP(mySsid, pass);
-  server.on("/", performanceTable);
-  server.onNotFound(handleNotFound);
-  server.begin();
+  WiFi.softAP(networkName, networkPassword);
+  webServer.on("/", displayPerformanceTable);
+  webServer.onNotFound(handle404);
+  webServer.begin();
 }
 
-void performancesetup() {
-  wifiSetup();
+void setupPerformanceMode() {
+  configureWiFi();
 }
 
-void performanceloop() {
-  wifi_loop();
+void handlePerformance() {
+  manageWiFiClient();
 }
 
-void wifi_loop() {
-  server.handleClient();
+void manageWiFiClient() {
+  webServer.handleClient();
 }
 
-void handleNotFound() {
-  String message = "File Not Found \n\n";
+void handle404() {
+  String message = "Page Not Found \n\n";
   message += "URI: ";
-  message += server.uri();
+  message += webServer.uri();
   message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += (webServer.method() == HTTP_GET) ? "GET" : "POST";
   message += "\nArguments: ";
-  message += server.args();
+  message += webServer.args();
   message += "\n";
 
-  for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  for (uint8_t i = 0; i < webServer.args(); i++) {
+    message += " " + webServer.argName(i) + ": " + webServer.arg(i) + "\n";
   }
-  server.send(404, "text/plain", message);
+  webServer.send(404, "text/plain", message);
 }
-void performanceTable() {
-  String html = "<html><head><title>Performance Table</title></head><body>";
-  html += "<center><h1>Your Performance Table</h1>";
-  html += "<table border='1'><tr><th>Index</th><th>Duration</th><th>Is Improve</th></tr>";
+
+void displayPerformanceTable() {
+  String html = "<html><head><title>Performance Overview</title></head><body>";
+  html += "<center><h1>Performance Overview</h1>";
+  html += "<table border='1'><tr><th>#</th><th>Time (ms)</th><th>Improved?</th></tr>";
   for (int i = 0; i < pressIndex; i++) {
     html += "<tr><td>" + String(i + 1) + "</td><td>" + String(pressDurations[i]) + "</td><td>" + (isImprove[i] ? "Yes" : "No") + "</td></tr>";
   }
   html += "</table></center></body></html>";
-  server.send(200, "text/html", html);
+  webServer.send(200, "text/html", html);
 }

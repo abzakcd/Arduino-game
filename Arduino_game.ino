@@ -1,20 +1,18 @@
-#define Switch_pin D2
+#define buttonPin D2
 
-bool IsServer;
-int cnt = 0;
+bool serverMode;
 
-void setup() {
-  pinMode(Switch_pin, INPUT_PULLUP);
-  setupgame();
+void initialize() {
+  pinMode(buttonPin, INPUT_PULLUP);
+  setupGameMode();
 }
 
-void loop() {
-  IsServer = (digitalRead(Switch_pin) == LOW) ? true : false;
-  if (!IsServer) {
-    LedOff();
-    gameloop();
-  } else if (IsServer && cnt == 0) {
-    performancesetup();
-    cnt++;
-  } else performanceloop();
+void mainLoop() {
+  serverMode = (digitalRead(buttonPin) == LOW) ? true : false;
+  if (!serverMode) {
+    turnOffLeds();
+    gameModeLoop();
+  } else if (serverMode) {
+    setupPerformanceMode();
+  } else handlePerformance();
 }

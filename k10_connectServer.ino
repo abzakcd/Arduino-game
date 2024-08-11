@@ -3,48 +3,48 @@
 #include <WiFiUdp.h>
 #include <ESP8266HTTPClient.h>
 
-const char* ssid = "Network";
+const char* wifiNetwork = "Network";
 
-WiFiClient client;
-int server_port = 80;  // http
+WiFiClient wifiClient;
+int httpPort = 80;  // http
 
-void wifiClient_Setup() {
-  Serial.println("wifiSetup");
-  WiFi.begin(ssid); 
+void setupWiFiClient() {
+  Serial.println("Setting up WiFi connection");
+  WiFi.begin(wifiNetwork); 
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.println("trying ...");
+    Serial.println("Attempting to connect...");
     delay(100);
   }
-  Serial.println("Connected to network");
+  Serial.println("Connected to WiFi network");
 }
 
-int GetData() {
-  int ret = -1;
-  HTTPClient http;
-  String dataURL = "http://api.kits4.me/GEN/api.php?ACT=GET&DEV=1122&CH=1";
-  http.begin(client, dataURL);
-  int httpCode = http.GET();
+int fetchData() {
+  int dataValue = -1;
+  HTTPClient httpClient;
+  String requestUrl = "http://api.kits4.me/GEN/api.php?ACT=GET&DEV=1122&CH=1";
+  httpClient.begin(wifiClient, requestUrl);
+  int httpResponseCode = httpClient.GET();
   Serial.print("HTTP response code: ");
-  Serial.println(httpCode);
-  if (httpCode == HTTP_CODE_OK) {
-    String Res = http.getString();
-    Serial.print("Response: ");
-    Serial.println(Res);
-    ret = Res.toInt();
+  Serial.println(httpResponseCode);
+  if (httpResponseCode == HTTP_CODE_OK) {
+    String serverResponse = httpClient.getString();
+    Serial.print("Server Response: ");
+    Serial.println(serverResponse);
+    dataValue = serverResponse.toInt();
   } else {
-    Serial.print("Error on HTTP request: ");
-    Serial.println(http.errorToString(httpCode).c_str());
+    Serial.print("HTTP request error: ");
+    Serial.println(httpClient.errorToString(httpResponseCode).c_str());
   }
-  http.end();
-  return ret;
+  httpClient.end();
+  return dataValue;
 }
 
-void SendData(int val) {
-  HTTPClient http;
-  String dataURL = "http://api.kits4.me/GEN/api.php?ACT=SET&DEV=1122&CH=1&VAL=" + String(val);
-  http.begin(client, dataURL);
-  int httpCode = http.GET();
-  Serial.print("HTTP response code (SendData): ");
-  Serial.println(httpCode);
-  http.end();
+void sendDataToServer(int value) {
+  HTTPClient httpClient;
+  String requestUrl = "http://api.kits4.me/GEN/api.php?ACT=SET&DEV=1122&CH=1&VAL=" + String(value);
+  httpClient.begin(wifiClient, requestUrl);
+  int httpResponseCode = httpClient.GET();
+  Serial.print("HTTP response code (sendDataToServer): ");
+  Serial.println(httpResponseCode);
+  httpClient.end();
 }
