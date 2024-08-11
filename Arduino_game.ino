@@ -1,18 +1,22 @@
-#define buttonPin D2
+#define modeSwitchPin D2
 
-bool serverMode;
+bool isInServerMode;
+int initializationCounter = 0;
 
-void initialize() {
-  pinMode(buttonPin, INPUT_PULLUP);
-  setupGameMode();
+void initialSetup() {
+  pinMode(modeSwitchPin, INPUT_PULLUP);
+  configureGameMode();
 }
 
-void mainLoop() {
-  serverMode = (digitalRead(buttonPin) == LOW) ? true : false;
-  if (!serverMode) {
-    turnOffLeds();
-    gameModeLoop();
-  } else if (serverMode) {
-    setupPerformanceMode();
-  } else handlePerformance();
+void primaryLoop() {
+  isInServerMode = (digitalRead(modeSwitchPin) == LOW);
+  if (!isInServerMode) {
+    deactivateAllLeds();
+    executeGameModeLoop();
+  } else if (isInServerMode && initializationCounter == 0) {
+    initializePerformanceServer();
+    initializationCounter++;
+  } else {
+    managePerformanceServer();
+  }
 }
