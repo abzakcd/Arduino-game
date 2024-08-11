@@ -1,71 +1,75 @@
-#define redLedPin D1
-#define greenLedPin D3
-#define blueLedPin D4
-#define buttonPin D7
 
-int previousState;
+#define redLed D1
+#define greenLed D3
+#define blueLed D4
+#define actionButton D7
+
+int previousButtonState;
 unsigned long lastButtonPressTime;
-unsigned long pressDuration;
-unsigned long previousPressDuration;
+unsigned long currentPressDuration;
+unsigned long previousBestDuration;
 
-unsigned long pressDurationsArray[10] = { 0 };
-bool improvementFlag[10] = { false };
-int currentIndex = 0;
+unsigned long pressDurationsLog[10] = { 0 };
+bool improvementStatus[10] = { false };
+int logIndex = 0;
 
-void setupGameMode() {
-  setupWiFiClient();
+void configureGameMode() {
+  establishWiFiConnection();
   Serial.begin(9600);
-  pinMode(redLedPin, OUTPUT);
-  pinMode(greenLedPin, OUTPUT);
-  pinMode(blueLedPin, OUTPUT);
-  pinMode(buttonPin, INPUT_PULLUP);
-  turnOffLeds();
-  previousState = HIGH;
+  pinMode(redLed, OUTPUT);
+  pinMode(greenLed, OUTPUT);
+  pinMode(blueLed, OUTPUT);
+  pinMode(actionButton, INPUT_PULLUP);
+  deactivateAllLeds();
+  previousButtonState = HIGH;
   lastButtonPressTime = millis();
-  previousPressDuration = fetchData();
-  if (previousPressDuration <= 0) sendDataToServer(60000);  
-
-void gameModeLoop() {
-  if (digitalRead(buttonPin) == LOW && previousState == HIGH && (millis() - lastButtonPressTime > 50)) {
-    lastButtonPressTime = millis();
-    previousState = LOW;
-    Serial.println("Button Pressed");
+  previousBestDuration = retrieveDataFromServer();
+  if (previousBestDuration <= 0) {
+    uploadDataToServer(6000000);  // במקרה והשרת ריק
   }
-  if (digitalRead(buttonPin) == HIGH && previousState == LOW) {
-    previousState = HIGH;
-    pressDuration = millis() - lastButtonPressTime;
-    Serial.println("Button Released");
-    Serial.print("Duration: ");
-    Serial.println(pressDuration);
+}
 
-    pressDurationsArray[currentIndex] = pressDuration;
-    improvementFlag[currentIndex] = pressDuration < previousPressDuration;
+void executeGameModeLoop() {
+  if (digitalRead(actionButton) == LOW && previousButtonState == HIGH && (millis() - lastButtonPressTime > 50)) {
+    lastButtonPressTime = millis();
+    previousButtonState = LOW;
+    Serial.println("Button Press Initiated");
+  }
+  if (digitalRead(actionButton) == HIGH && previousButtonState == LOW) {
+    previousButtonState = HIGH;
+    currentPressDuration = millis() - lastButtonPressTime;
+    Serial.println("Button Press Ended");
+    Serial.print("Press Duration: ");
+    Serial.println(currentPressDuration);
 
-    if (improvementFlag[currentIndex]) {
-      sendDataToServer(pressDuration);
-      activateLed(0x5DE2E7);
+    pressDurationsLog[logIndex] = currentPressDuration;
+    improvementStatus[logIndex] = currentPressDuration < previousBestDuration;
+
+    if (improvementStatus[logIndex]) {
+      uploadDataToServer(currentPressDuration);
+      illuminateLed(0x5DE2E7);  // צבע כחול
     } else {
-      activateLed(0xFE9900);
+      illuminateLed(0xFE9900);  // צבע כתום
     }
 
-    currentIndex = (currentIndex + 1) % 10;
+    logIndex = (logIndex + 1) % 10;
     delay(200);
-    previousPressDuration = fetchData();
+    previousBestDuration = retrieveDataFromServer();
   }
 }
 
-void activateLed(long colorHex) {
-  int redValue = (colorHex >> 16) & 0xFF;
-  int greenValue = (colorHex >> 8) & 0xFF;
-  int blueValue = colorHex & 0xFF;
+void illuminateLed(long hexColor) {
+  int redIntensity = (hexColor >> 16) & 0xFF;
+  int greenIntensity = (hexColor >> 8) & 0xFF;
+  int blueIntensity = hexColor & 0xFF;
 
-  analogWrite(redLedPin, redValue);
-  analogWrite(greenLedPin, greenValue);
-  analogWrite(blueLedPin, blueValue);
+  analogWrite(redLed, redIntensity);
+  analogWrite(greenLed, greenIntensity);
+  analogWrite(blueLed, blueIntensity);
 }
 
-void turnOffLeds() {
-  analogWrite(redLedPin, 0);
-  analogWrite(greenLedPin, 0);
-  analogWrite(blueLedPin, 0);
+void deactivateAllLeds() {
+  analogWrite(redLed, 0);
+  analogWrite(greenLed, 0);
+  analogWrite(blueLed, 0);
 }
