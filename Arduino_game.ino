@@ -3,12 +3,12 @@
 bool isInServerMode;
 int initializationCounter = 0;
 
-void initialSetup() {
+void Setup() {
   pinMode(modeSwitchPin, INPUT_PULLUP);
   configureGameMode();
 }
 
-void primaryLoop() {
+void Loop() {
   isInServerMode = (digitalRead(modeSwitchPin) == LOW);
   if (!isInServerMode) {
     deactivateAllLeds();
