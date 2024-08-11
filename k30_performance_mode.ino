@@ -1,57 +1,63 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 
-IPAddress apIP(55, 55, 55, 55);
+IPAddress accessPointIP(55, 55, 55, 55);
 
-const char* networkName = "Arduino";  // Network name
-const char* networkPassword = "";     // Network password, if any
+const char* accessPointName = "Arduino_AP";  // Network name
+const char* accessPointPassword = "";        // Network password, if any
 
-ESP8266WebServer webServer(80);
+ESP8266WebServer performanceWebServer(80);
 
-void configureWiFi() {
+void configureAccessPoint() {
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-  WiFi.softAP(networkName, networkPassword);
-  webServer.on("/", displayPerformanceTable);
-  webServer.onNotFound(handle404);
-  webServer.begin();
+  WiFi.softAPConfig(accessPointIP, accessPointIP, IPAddress(255, 255, 255, 0));
+  WiFi.softAP(accessPointName, accessPointPassword);
+  performanceWebServer.on("/", servePerformanceDashboard);
+  performanceWebServer.onNotFound(handlePageNotFound);
+  performanceWebServer.begin();
 }
 
-void setupPerformanceMode() {
-  configureWiFi();
+void initializePerformanceServer() {
+  configureAccessPoint();
 }
 
-void handlePerformance() {
-  manageWiFiClient();
+void managePerformanceServer() {
+  handleClientRequests();
 }
 
-void manageWiFiClient() {
-  webServer.handleClient();
+void handleClientRequests() {
+  performanceWebServer.handleClient();
 }
 
-void handle404() {
-  String message = "Page Not Found \n\n";
-  message += "URI: ";
-  message += webServer.uri();
-  message += "\nMethod: ";
-  message += (webServer.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += webServer.args();
-  message += "\n";
+void handlePageNotFound() {
+  String message = "404 - Page Not Found
 
-  for (uint8_t i = 0; i < webServer.args(); i++) {
-    message += " " + webServer.argName(i) + ": " + webServer.arg(i) + "\n";
+";
+  message += "Requested URI: ";
+  message += performanceWebServer.uri();
+  message += "
+HTTP Method: ";
+  message += (performanceWebServer.method() == HTTP_GET) ? "GET" : "POST";
+  message += "
+Number of Arguments: ";
+  message += performanceWebServer.args();
+  message += "
+";
+  
+  for (uint8_t i = 0; i < performanceWebServer.args(); i++) {
+    message += " " + performanceWebServer.argName(i) + ": " + performanceWebServer.arg(i) + "
+";
   }
-  webServer.send(404, "text/plain", message);
+  performanceWebServer.send(404, "text/plain", message);
 }
 
-void displayPerformanceTable() {
-  String html = "<html><head><title>Performance Overview</title></head><body>";
-  html += "<center><h1>Performance Overview</h1>";
-  html += "<table border='1'><tr><th>#</th><th>Time (ms)</th><th>Improved?</th></tr>";
-  for (int i = 0; i < pressIndex; i++) {
-    html += "<tr><td>" + String(i + 1) + "</td><td>" + String(pressDurations[i]) + "</td><td>" + (isImprove[i] ? "Yes" : "No") + "</td></tr>";
+void servePerformanceDashboard() {
+  String htmlContent = "<html><head><title>Performance Dashboard</title></head><body>";
+  htmlContent += "<center><h1>Performance Metrics</h1>";
+  htmlContent += "<table border='1'><tr><th>Attempt</th><th>Duration (ms)</th><th>Improved?</th></tr>";
+  for (int i = 0; i < logIndex; i++) {
+    htmlContent += "<tr><td>" + String(i + 1) + "</td><td>" + String(pressDurationsLog[i]) + "</td><td>" + (improvementStatus[i] ? "Yes" : "No") + "</td></tr>";
   }
-  html += "</table></center></body></html>";
-  webServer.send(200, "text/html", html);
+  htmlContent += "</table></center></body></html>";
+  performanceWebServer.send(200, "text/html", htmlContent);
 }
