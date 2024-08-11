@@ -30,23 +30,17 @@ void handleClientRequests() {
 }
 
 void handlePageNotFound() {
-  String message = "404 - Page Not Found
-
-";
+  String message = "404 - Page Not Found\n\n";
   message += "Requested URI: ";
   message += performanceWebServer.uri();
-  message += "
-HTTP Method: ";
+  message += "\nHTTP Method: ";
   message += (performanceWebServer.method() == HTTP_GET) ? "GET" : "POST";
-  message += "
-Number of Arguments: ";
+  message += "\nNumber of Arguments: ";
   message += performanceWebServer.args();
-  message += "
-";
-  
+  message += "\n";
+
   for (uint8_t i = 0; i < performanceWebServer.args(); i++) {
-    message += " " + performanceWebServer.argName(i) + ": " + performanceWebServer.arg(i) + "
-";
+    message += " " + performanceWebServer.argName(i) + ": " + performanceWebServer.arg(i) + "\n";
   }
   performanceWebServer.send(404, "text/plain", message);
 }
