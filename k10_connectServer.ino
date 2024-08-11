@@ -1,50 +1,51 @@
+
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 #include <ESP8266HTTPClient.h>
 
-const char* wifiNetwork = "Network";
+const char* wifiNetworkName = "Network";
 
-WiFiClient wifiClient;
-int httpPort = 80;  // http
+WiFiClient espClient;
+int httpServerPort = 80;  // HTTP port
 
-void setupWiFiClient() {
-  Serial.println("Setting up WiFi connection");
-  WiFi.begin(wifiNetwork); 
+void establishWiFiConnection() {
+  Serial.println("Initializing WiFi Connection...");
+  WiFi.begin(wifiNetworkName); 
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.println("Attempting to connect...");
+    Serial.println("Attempting to Connect to WiFi...");
     delay(100);
   }
-  Serial.println("Connected to WiFi network");
+  Serial.println("Successfully Connected to WiFi Network");
 }
 
-int fetchData() {
-  int dataValue = -1;
+int retrieveDataFromServer() {
+  int retrievedValue = -1;
   HTTPClient httpClient;
-  String requestUrl = "http://api.kits4.me/GEN/api.php?ACT=GET&DEV=1122&CH=1";
-  httpClient.begin(wifiClient, requestUrl);
+  String getRequestUrl = "http://api.kits4.me/GEN/api.php?ACT=GET&DEV=1122&CH=1";
+  httpClient.begin(espClient, getRequestUrl);
   int httpResponseCode = httpClient.GET();
-  Serial.print("HTTP response code: ");
+  Serial.print("HTTP GET Response Code: ");
   Serial.println(httpResponseCode);
   if (httpResponseCode == HTTP_CODE_OK) {
     String serverResponse = httpClient.getString();
     Serial.print("Server Response: ");
     Serial.println(serverResponse);
-    dataValue = serverResponse.toInt();
+    retrievedValue = serverResponse.toInt();
   } else {
-    Serial.print("HTTP request error: ");
+    Serial.print("Error During HTTP GET Request: ");
     Serial.println(httpClient.errorToString(httpResponseCode).c_str());
   }
   httpClient.end();
-  return dataValue;
+  return retrievedValue;
 }
 
-void sendDataToServer(int value) {
+void uploadDataToServer(int valueToUpload) {
   HTTPClient httpClient;
-  String requestUrl = "http://api.kits4.me/GEN/api.php?ACT=SET&DEV=1122&CH=1&VAL=" + String(value);
-  httpClient.begin(wifiClient, requestUrl);
+  String postRequestUrl = "http://api.kits4.me/GEN/api.php?ACT=SET&DEV=1122&CH=1&VAL=" + String(valueToUpload);
+  httpClient.begin(espClient, postRequestUrl);
   int httpResponseCode = httpClient.GET();
-  Serial.print("HTTP response code (sendDataToServer): ");
+  Serial.print("HTTP GET Response Code (Data Upload): ");
   Serial.println(httpResponseCode);
   httpClient.end();
 }
